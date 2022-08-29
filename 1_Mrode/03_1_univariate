@@ -1,0 +1,88 @@
+####################################################################################
+#                                                                                  #
+#                  Univariate Example 3.1, pages 42 - 45                           #
+#                                                                                  #
+####################################################################################
+mkdir Univariate_anim
+cd Univariate_anim
+
+# generate pedigree file
+echo "anim sire dam" > ped_head
+cat <<EOF > pedigree
+1 . .
+2 . .
+3 . .
+4 1 .
+5 3 2
+6 1 2
+7 4 5
+8 3 6
+EOF
+
+# generate performance file
+echo "anim Sex WWG" > perf_head
+cat <<EOF > perf
+4 M 4.5
+5 F 2.9
+6 F 3.9
+7 M 3.5
+8 M 5.0
+EOF
+
+# stack pedigree
+stack_ped pedigree ped_stk
+
+# generate Ainverse and calculate inbreeding
+invnrm -i ped_stk -a -o inbreed -v Ainv
+
+# vectors to generate X and Z
+awk '{print $1}' perf > id.dat 		# animals with phenotypes
+awk '{print $2}' perf > Sex 		# sex
+awk '{print $3}' perf > y0 			# phenotypes
+
+# vectors for levels of each fixed effect
+awk '$1!="."{print $1}' Sex | sort -u > Sex.eff
+
+# vector of animals in the pedigree
+awk '{print $1}' ped_stk > id.eff
+
+# vector of unique animals in the performance file
+awk '$1!="."{print $1}' id.dat | sort -u > perf_id.eff
+
+# create X
+cgen_z -d Sex -e Sex.eff -r y0 -o X00
+
+# create Z
+cgen_z -d id.dat -e id.eff -r y0 -o Z00
+
+alpha=$(echo 2)
+
+# create LHS matrices
+cmult -t -a X00 -b X00 -c X00X00
+cmult -t -a X00 -b Z00 -c X00Z00
+cmult -t -a Z00 -b Z00 -c Z00Z00
+
+# create RHS vectors
+cmult -t -a X00 -b y0 -c rhs.1
+cmult -t -a Z00 -b y0 -c rhs.2
+
+# set up LHS
+echo "MAP
+X00X00 X00Z00
+sym Z00Z00+Ainv*$alpha" > lhsmap
+
+# set up RHS
+echo "MAP
+rhs.1
+rhs.2" > rhsmap
+
+# solve!
+pcg -A lhsmap -b rhsmap -o sol -n 100 -N
+
+# generate results files
+mkdir Results
+echo "Effect Solution" > Results/FixedEffects
+paste -d " " <(cat Sex.eff) sol.rhs.1 >> Results/FixedEffects # will be in a different order to textbook
+
+echo "Animal Solution" > Results/AnimalEffects
+paste -d " " id.eff sol.rhs.2 >> Results/AnimalEffects 
