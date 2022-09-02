@@ -58,15 +58,7 @@ helical euler zgen -d id.dat -e id.eff -r y0 -o Z00
 #last line on page 42, alpha = 40/20 = 2
 alpha=$(echo 2)
 
-# create LHS matrices
-#cmult -t -a X00 -b X00 -c X00X00
-#cmult -t -a X00 -b Z00 -c X00Z00
-#cmult -t -a Z00 -b Z00 -c Z00Z00
-
-# create RHS vectors
-#cmult -t -a X00 -b y0 -c rhs.1
-#cmult -t -a Z00 -b y0 -c rhs.2
-
+# create LHS and RHS matrices
 echo "X00X00 = X00' * X00
 X00Z00 = X00' * Z00
 Z00Z00 = Z00' * Z00
@@ -92,7 +84,6 @@ rhs.0
 rhs.1" > rhsmap
 
 # solve!
-#pcg -A lhsmap -b rhsmap -o sol -n 100 -N
 helical euler pcg lhsmap rhsmap sol -n 100 
 
 # view MAP file of solutions

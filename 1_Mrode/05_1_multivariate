@@ -75,37 +75,33 @@ helical euler zgen -d id.dat -e id.eff -r y0 -o Z00
 
 cnewr  -S -R resid -r R0 y0 y1
 
-# create LHS matrices
-echo "X1RX1 = X00' * resid11 * X00
+# create LHS and RHS matrices
+cat << EOF > expr-lhs-rhs
+#lhs
+X1RX1 = X00' * resid11 * X00
 X1RX2 = X00' * resid12 * X00
 X2RX2 = X00' * resid22 * X00
-
 X1RZ1 = X00' * resid11 * Z00
 X1RZ2 = X00' * resid12 * Z00
 X2RZ1 = X00' * resid12 * Z00
 X2RZ2 = X00' * resid22 * Z00
-
 Z1RZ1 = Z00' * resid11 * Z00
 Z2RZ1 = Z00' * resid12 * Z00
 Z2RZ2 = Z00' * resid22 * Z00
 
-write(\"X1RX1\", X1RX1)
-write(\"X1RX2\", X1RX2)
-write(\"X2RX2\", X2RX2)
+write("X1RX1", X1RX1)
+write("X1RX2", X1RX2)
+write("X2RX2", X2RX2)
+write("X1RZ1", X1RZ1)
+write("X1RZ2", X1RZ2)
+write("X2RZ2", X2RZ2)
+write("Z1RZ1", Z1RZ1)
+write("X2RZ1", X2RZ1)
+write("Z2RZ1", Z2RZ1)
+write("Z2RZ2", Z2RZ2)
 
-write(\"X1RZ1\", X1RZ1)
-write(\"X1RZ2\", X1RZ2)
-write(\"X2RZ1\", X2RZ1)
-write(\"X2RZ2\", X2RZ2)
-
-write(\"Z1RZ1\", Z1RZ1)
-write(\"Z2RZ1\", Z2RZ1)
-write(\"Z2RZ2\", Z2RZ2)" > expr-lhs
-
-helical euler expr expr-lhs
-
-# create RHS vectors
-echo "X1Ry1 = X00' * resid11 * y0
+#rhs
+X1Ry1 = X00' * resid11 * y0
 X2Ry1 = X00' * resid12 * y0
 X1Ry2 = X00' * resid12 * y1
 X2Ry2 = X00' * resid22 * y1
@@ -119,12 +115,13 @@ Z2Ry2 = Z00' * resid22 * y1
 rhs.2 = Z1Ry1 + Z1Ry2 #BV WWG
 rhs.3 = Z2Ry1 + Z2Ry2 #BV PWG
 
-write(\"rhs.0\", rhs.0)
-write(\"rhs.1\", rhs.1)
-write(\"rhs.2\", rhs.2)
-write(\"rhs.3\", rhs.3)
-" > expr-rhs
-helical euler expr expr-rhs
+write("rhs.0", rhs.0)
+write("rhs.1", rhs.1)
+write("rhs.2", rhs.2)
+write("rhs.3", rhs.3)
+EOF
+
+helical euler expr expr-lhs-rhs
 
 # set up LHS
 echo "MAP

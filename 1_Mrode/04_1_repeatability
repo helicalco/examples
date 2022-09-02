@@ -74,45 +74,31 @@ helical euler zgen -d id.dat -e perf_id.eff -r y0 -o W00
 alpha1=$(echo 1.4)
 alpha2=$(echo 2.333)
 
-# create LHS matrices
-#cmult -t -a X00 -b X00 -c X00X00
-#cmult -t -a X00 -b Z00 -c X00Z00
-#cmult -t -a X00 -b W00 -c X00W00
-
-#cmult -t -a Z00 -b Z00 -c Z00Z00
-#cmult -t -a Z00 -b W00 -c Z00W00
-
-#cmult -t -a W00 -b W00 -c W00W00
-
-echo "X00X00 = X00' * X00
+cat << EOF > expr-lhs-rhs
+#LHS
+X00X00 = X00' * X00
 X00Z00 = X00' * Z00
 X00W00 = X00' * W00
 Z00Z00 = Z00' * Z00
 Z00W00 = Z00' * W00
 W00W00 = W00' * W00
-write(\"X00X00\", X00X00)
-write(\"X00Z00\", X00Z00)
-write(\"X00W00\", X00W00)
-write(\"Z00Z00\", Z00Z00)
-write(\"Z00W00\", Z00W00)
-write(\"W00W00\", W00W00)
-" > expr-lhs
+write("X00X00", X00X00)
+write("X00Z00", X00Z00)
+write("X00W00", X00W00)
+write("Z00Z00", Z00Z00)
+write("Z00W00", Z00W00)
+write("W00W00", W00W00)
 
-helical euler expr expr-lhs
-
-# create RHS vectors
-#cmult -t -a X00 -b y0 -c rhs.1
-#cmult -t -a Z00 -b y0 -c rhs.2
-#cmult -t -a W00 -b y0 -c rhs.3
-
-echo "rhs.0 = X00' * y0
+#RHS
+rhs.0 = X00' * y0
 rhs.1 = Z00' * y0
 rhs.2 = W00' * y0
-write(\"rhs.0\", rhs.0)
-write(\"rhs.1\", rhs.1)
-write(\"rhs.2\", rhs.2)
-" > expr-rhs
-helical euler expr expr-rhs
+write("rhs.0", rhs.0)
+write("rhs.1", rhs.1)
+write("rhs.2", rhs.2)
+EOF
+
+helical euler expr expr-lhs-rhs
 
 #create identity matrix with 5 rows and 5 cols for each anim with perf record
 nanim=$(wc -l perf_id.eff | awk '{print $1}')
@@ -131,7 +117,6 @@ rhs.1
 rhs.2" > rhsmap
 
 # solve!
-#pcg -A lhsmap -b rhsmap -o sol -n 100 -N
 helical euler pcg lhsmap rhsmap sol -n 100 
 
 # view MAP file of solutions
@@ -142,8 +127,14 @@ cat sol
 
 # generate results files
 mkdir Results
+#create file with zero for constrained HYS A and C
+cat <<EOF > HYS_head
+A 0
+C 0
+EOF
+
 echo "Effect Solution" > Results/FixedEffects
-paste -d " " <(cat HYS.eff Parity.eff) <(mprint -p sol_0_0) >> Results/FixedEffects # remember we set HYS=A and HYS=C to zero
+paste -d " " <(cat HYS.eff Parity.eff) <(mprint -p sol_0_0) | cat - HYS_head | sort >> Results/FixedEffects # remember we set HYS=A and HYS=C to zero
 
 echo "Animal Solution" > Results/AnimalEffects
 paste -d " " id.eff <(mprint -p sol_1_0) >> Results/AnimalEffects # slightly different order to textbook due to stacking pedigree
