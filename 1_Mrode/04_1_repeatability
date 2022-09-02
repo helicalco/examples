@@ -3,8 +3,8 @@
 #                  Repeatability Example 4.1, pages 73 - 75                        #
 #                                                                                  #
 ####################################################################################
-mkdir Repeatability
-cd Repeatability
+mkdir 04_1_Repeatability
+cd 04_1_Repeatability
 
 # generate pedigree file
 echo "anim sire dam" > ped_head
@@ -20,6 +20,7 @@ cat <<EOF > pedigree
 EOF
 
 # generate performance file
+# substitute A, B, C and D for HYS 1, 2, 3 and 4
 echo "anim Parity HYS Fat" > perf_head
 cat <<EOF > perf
 4 1 A 201
@@ -59,35 +60,63 @@ awk '{print $1}' ped_stk > id.eff
 awk '$1!="."{print $1}' id.dat | sort -u > perf_id.eff
 
 # create X
-cgen_z -d Parity -e Parity.eff -r y0 -o Xparity
-cgen_z -d HYS -e HYS.eff -r y0 -o XHYS
-chcat XHYS Xparity X00
+helical euler zgen -d Parity -e Parity.eff -r y0 -o Xparity
+helical euler zgen -d HYS -e HYS.eff -r y0 -o XHYS
+helical euler chcat XHYS Xparity X00
 
 # create Z
-cgen_z -d id.dat -e id.eff -r y0 -o Z00
+helical euler zgen -d id.dat -e id.eff -r y0 -o Z00
 
 # create W
-cgen_z -d id.dat -e perf_id.eff -r y0 -o W00
+helical euler zgen -d id.dat -e perf_id.eff -r y0 -o W00
 
+#from page 73, alpha1 = 1.4 and alpha2 = 2.333
 alpha1=$(echo 1.4)
-twoalpha1=$(echo 2.8)
 alpha2=$(echo 2.333)
 
 # create LHS matrices
-cmult -t -a X00 -b X00 -c X00X00
-cmult -t -a X00 -b Z00 -c X00Z00
-cmult -t -a X00 -b W00 -c X00W00
+#cmult -t -a X00 -b X00 -c X00X00
+#cmult -t -a X00 -b Z00 -c X00Z00
+#cmult -t -a X00 -b W00 -c X00W00
 
-cmult -t -a Z00 -b Z00 -c Z00Z00
-cmult -t -a Z00 -b W00 -c Z00W00
+#cmult -t -a Z00 -b Z00 -c Z00Z00
+#cmult -t -a Z00 -b W00 -c Z00W00
 
-cmult -t -a W00 -b W00 -c W00W00
+#cmult -t -a W00 -b W00 -c W00W00
+
+echo "X00X00 = X00' * X00
+X00Z00 = X00' * Z00
+X00W00 = X00' * W00
+Z00Z00 = Z00' * Z00
+Z00W00 = Z00' * W00
+W00W00 = W00' * W00
+write(\"X00X00\", X00X00)
+write(\"X00Z00\", X00Z00)
+write(\"X00W00\", X00W00)
+write(\"Z00Z00\", Z00Z00)
+write(\"Z00W00\", Z00W00)
+write(\"W00W00\", W00W00)
+" > expr-lhs
+
+helical euler expr expr-lhs
 
 # create RHS vectors
-cmult -t -a X00 -b y0 -c rhs.1
-cmult -t -a Z00 -b y0 -c rhs.2
-cmult -t -a W00 -b y0 -c rhs.3
-ident 5 > I
+#cmult -t -a X00 -b y0 -c rhs.1
+#cmult -t -a Z00 -b y0 -c rhs.2
+#cmult -t -a W00 -b y0 -c rhs.3
+
+echo "rhs.0 = X00' * y0
+rhs.1 = Z00' * y0
+rhs.2 = W00' * y0
+write(\"rhs.0\", rhs.0)
+write(\"rhs.1\", rhs.1)
+write(\"rhs.2\", rhs.2)
+" > expr-rhs
+helical euler expr expr-rhs
+
+#create identity matrix with 5 rows and 5 cols for each anim with perf record
+nanim=$(wc -l perf_id.eff | awk '{print $1}')
+ident $nanim > I
 
 # set up LHS
 echo "MAP
@@ -97,20 +126,27 @@ sym sym W00W00+I*$alpha2" > lhsmap
 
 # set up RHS
 echo "MAP
+rhs.0
 rhs.1
-rhs.2
-rhs.3" > rhsmap
+rhs.2" > rhsmap
 
 # solve!
-pcg -A lhsmap -b rhsmap -o sol -n 100 -N
+#pcg -A lhsmap -b rhsmap -o sol -n 100 -N
+helical euler pcg lhsmap rhsmap sol -n 100 
+
+# view MAP file of solutions
+cat sol
+# has file sol_0_0 for rhs.0 
+# has file sol_1_0 for rhs.1 
+# has file sol_2_0 for rhs.2
 
 # generate results files
 mkdir Results
 echo "Effect Solution" > Results/FixedEffects
-paste -d " " <(cat HYS.eff Parity.eff) sol.rhs.1 >> Results/FixedEffects # remember we set HYS=A and HYS=C to zero
+paste -d " " <(cat HYS.eff Parity.eff) <(mprint -p sol_0_0) >> Results/FixedEffects # remember we set HYS=A and HYS=C to zero
 
 echo "Animal Solution" > Results/AnimalEffects
-paste -d " " id.eff sol.rhs.2 >> Results/AnimalEffects # slightly different order to textbook due to stacking pedigree
+paste -d " " id.eff <(mprint -p sol_1_0) >> Results/AnimalEffects # slightly different order to textbook due to stacking pedigree
 
 echo "Animal Solution" > Results/AnimalPEEffects
-paste -d " " perf_id.eff sol.rhs.3 >> Results/AnimalPEEffects
+paste -d " " perf_id.eff <(mprint -p sol_2_0) >> Results/AnimalPEEffects
