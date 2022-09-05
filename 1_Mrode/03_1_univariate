@@ -94,7 +94,7 @@ cat sol
 # generate results files
 mkdir Results
 echo "Effect Solution" > Results/FixedEffects
-paste -d " " Sex.eff <(mprint -p sol_0_0) >> Results/FixedEffects # will be in a different order to textbook
+paste -d " " Sex.eff <(helical euler print sol_0_0) >> Results/FixedEffects # will be in a different order to textbook
 
 echo "Animal Solution" > Results/AnimalEffects
 paste -d " " id.eff <(mprint -p sol_1_0) >> Results/AnimalEffects 
