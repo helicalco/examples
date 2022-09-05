@@ -134,10 +134,10 @@ C 0
 EOF
 
 echo "Effect Solution" > Results/FixedEffects
-paste -d " " <(cat HYS.eff Parity.eff) <(mprint -p sol_0_0) | cat - HYS_head | sort >> Results/FixedEffects # remember we set HYS=A and HYS=C to zero
+paste -d " " <(cat HYS.eff Parity.eff) <(helical euler print sol_0_0) | cat - HYS_head | sort >> Results/FixedEffects # remember we set HYS=A and HYS=C to zero
 
 echo "Animal Solution" > Results/AnimalEffects
-paste -d " " id.eff <(mprint -p sol_1_0) >> Results/AnimalEffects # slightly different order to textbook due to stacking pedigree
+paste -d " " id.eff <(helical euler print sol_1_0) >> Results/AnimalEffects # slightly different order to textbook due to stacking pedigree
 
 echo "Animal Solution" > Results/AnimalPEEffects
-paste -d " " perf_id.eff <(mprint -p sol_2_0) >> Results/AnimalPEEffects
+paste -d " " perf_id.eff <(helical euler print sol_2_0) >> Results/AnimalPEEffects

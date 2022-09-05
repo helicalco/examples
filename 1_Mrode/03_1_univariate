@@ -59,17 +59,18 @@ helical euler zgen -d id.dat -e id.eff -r y0 -o Z00
 alpha=$(echo 2)
 
 # create LHS and RHS matrices
-echo "X00X00 = X00' * X00
+cat << EOF > expr-lhs-rhs
+X00X00 = X00' * X00
 X00Z00 = X00' * Z00
 Z00Z00 = Z00' * Z00
 rhs.0 = X00' * y0
 rhs.1 = Z00' * y0
-write(\"X00X00\", X00X00)
-write(\"X00Z00\", X00Z00)
-write(\"Z00Z00\", Z00Z00)
-write(\"rhs.0\", rhs.0)
-write(\"rhs.1\", rhs.1)
-" > expr-lhs-rhs
+write("X00X00", X00X00)
+write("X00Z00", X00Z00)
+write("Z00Z00", Z00Z00)
+write("rhs.0", rhs.0)
+write("rhs.1", rhs.1)
+EOF
 
 helical euler expr expr-lhs-rhs
 
@@ -97,4 +98,4 @@ echo "Effect Solution" > Results/FixedEffects
 paste -d " " Sex.eff <(helical euler print sol_0_0) >> Results/FixedEffects # will be in a different order to textbook
 
 echo "Animal Solution" > Results/AnimalEffects
-paste -d " " id.eff <(mprint -p sol_1_0) >> Results/AnimalEffects 
+paste -d " " id.eff <(helical euler print sol_1_0) >> Results/AnimalEffects 

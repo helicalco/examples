@@ -41,10 +41,10 @@ cat <<EOF > R0
 27 70
 EOF
 
-invert -i G0 -o G0inv
-export g11=$(mprint -p G0inv|  awk 'NR==1{print $1}')
-export g12=$(mprint -p G0inv|  awk 'NR==1{print $2}')
-export g22=$(mprint -p G0inv|  awk 'NR==2{print $2}')
+helical euler expr 'inv(G0)' -o G0inv
+export g11=$(helical euler print G0inv|  awk 'NR==1{print $1}')
+export g12=$(helical euler print G0inv|  awk 'NR==1{print $2}')
+export g22=$(helical euler print G0inv|  awk 'NR==2{print $2}')
 
 # stack pedigree
 stack_ped pedigree ped_stk
@@ -158,10 +158,10 @@ helical euler pcg lhsmap rhsmap sol -n 100
 # generate results files
 mkdir Results
 echo "Effect Solution" > Results/FixedEffectsFAT1
-paste -d " " HYS1.eff <(mprint -p sol_0_0) >> Results/FixedEffectsFAT1 
+paste -d " " HYS1.eff <(helical euler print sol_0_0) >> Results/FixedEffectsFAT1 
 echo "Effect Solution" > Results/FixedEffectsFAT2
-paste -d " " HYS2.eff <(mprint -p sol_1_0) >> Results/FixedEffectsFAT2
+paste -d " " HYS2.eff <(helical euler print sol_1_0) >> Results/FixedEffectsFAT2
 echo "Animal Solution" > Results/AnimalEffectsFAT1
-paste -d " " id.eff <(mprint -p sol_2_0) >> Results/AnimalEffectsFAT1
+paste -d " " id.eff <(helical euler print sol_2_0) >> Results/AnimalEffectsFAT1
 echo "Animal Solution" > Results/AnimalEffectsFAT2
-paste -d " " id.eff <(mprint -p sol_3_0) >> Results/AnimalEffectsFAT2
+paste -d " " id.eff <(helical euler print sol_3_0) >> Results/AnimalEffectsFAT2

@@ -42,9 +42,9 @@ cat <<EOF > R0
 EOF
 
 invert -i G0 -o G0inv
-export g11=$(mprint -p G0inv|  awk 'NR==1{print $1}')
-export g12=$(mprint -p G0inv|  awk 'NR==1{print $2}')
-export g22=$(mprint -p G0inv|  awk 'NR==2{print $2}')
+export g11=$(helical euler print G0inv|  awk 'NR==1{print $1}')
+export g12=$(helical euler print G0inv|  awk 'NR==1{print $2}')
+export g22=$(helical euler print G0inv|  awk 'NR==2{print $2}')
 
 # stack pedigree
 stack_ped pedigree ped_stk
@@ -143,10 +143,10 @@ helical euler pcg lhsmap rhsmap sol -n 100
 # generate results files
 mkdir Results
 echo "Effect Solution" > Results/FixedEffectsWWG
-paste -d " " Sex.eff <(mprint -p sol_0_0) >> Results/FixedEffectsWWG # will be in a different order to textbook
+paste -d " " Sex.eff <(helical euler print sol_0_0) >> Results/FixedEffectsWWG # will be in a different order to textbook
 echo "Effect Solution" > Results/FixedEffectsPWG
-paste -d " " Sex.eff <(mprint -p sol_1_0) >> Results/FixedEffectsPWG
+paste -d " " Sex.eff <(helical euler print sol_1_0) >> Results/FixedEffectsPWG
 echo "Animal Solution" > Results/AnimalEffectsWWG
-paste -d " " id.eff <(mprint -p sol_2_0) >> Results/AnimalEffectsWWG
+paste -d " " id.eff <(helical euler print sol_2_0) >> Results/AnimalEffectsWWG
 echo "Animal Solution" > Results/AnimalEffectsPWG
-paste -d " " id.eff <(mprint -p sol_3_0) >> Results/AnimalEffectsPWG
+paste -d " " id.eff <(helical euler print sol_3_0) >> Results/AnimalEffectsPWG
