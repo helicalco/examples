@@ -7,26 +7,27 @@ mkdir 05_5_Multivar_anim
 cd 05_5_Multivar_anim
 
 # generate pedigree file
+# IDs can be left as in the textbook e.g. 1, 2 or can be strings e.g. anim001 or ID1 etc.
 echo "anim sire dam" > ped_head
 cat <<EOF > pedigree
-1 . .
-2 . .
-3 . .
-4 1 2
-5 3 2
-6 1 5
-7 3 4
-8 1 7
+anim001 . .
+anim002 . .
+anim003 . .
+anim004 anim001 anim002
+anim005 anim003 anim002
+anim006 anim001 anim005
+anim007 anim003 anim004
+anim008 anim001 anim007
 EOF
 
 # generate performance file
 echo "anim HYS1 HYS2 FAT1 FAT2" > perf_head
 cat <<EOF > perf
-4 1 1 201 280
-5 1 2 150 200
-6 2 1 160 190
-7 1 1 180 250
-8 2 2 285 300
+anim004 1 1 201 280
+anim005 1 2 150 200
+anim006 2 1 160 190
+anim007 1 1 180 250
+anim008 2 2 285 300
 EOF
 
 # generate genetic variance file
@@ -53,7 +54,7 @@ helical euler expr expr-G0
 # stack pedigree
 helical bolt pedstack -p pedigree -o ped_stk
 
-# generate Ainverse
+# generate Ainverse 
 helical bolt invnrm -p ped_stk -v Ainv
 
 # vectors to generate X and Z and Z.s
@@ -142,18 +143,24 @@ helical euler pcg lhsmap rhsmap sol -n 100
 # generate results files
 mkdir Results
 echo "Effect Solution" > Results/FixedEffectsFAT1
-paste -d " " HYS1.eff <(helical euler print sol_0_0) >> Results/FixedEffectsFAT1 
+paste -d " " HYS1.eff <(helical euler print sol_0_0) | awk '{printf "%s %.3f\n",$1,$2}' >> Results/FixedEffectsFAT1 
 echo "Effect Solution" > Results/FixedEffectsFAT2
-paste -d " " HYS2.eff <(helical euler print sol_1_0) >> Results/FixedEffectsFAT2
+paste -d " " HYS2.eff <(helical euler print sol_1_0) | awk '{printf "%s %.3f\n",$1,$2}' >> Results/FixedEffectsFAT2
+
+#generate one fixed effects file instead of two with labels for WWG or PWG sec effects
+echo "Effect Solution" > Results/FixedEffects
+paste -d " " <(awk '{print $1"-HYS1"}' HYS1.eff) <(helical euler print sol_0_0) | awk '{printf "%s %.3f\n",$1,$2}' >> Results/FixedEffects
+paste -d " " <(awk '{print $1"-HYS2"}' HYS2.eff) <(helical euler print sol_1_0) | awk '{printf "%s %.3f\n",$1,$2}' >> Results/FixedEffects
+
 
 # results in stacked pedigree order
 echo "Animal Solution" > Results/AnimalEffectsFAT1
-paste -d " " id.eff <(helical euler print sol_2_0) >> Results/AnimalEffectsFAT1
+paste -d " " id.eff <(helical euler print sol_2_0) | awk '{printf "%s %.3f\n",$1,$2}' >> Results/AnimalEffectsFAT1
 echo "Animal Solution" > Results/AnimalEffectsFAT2
-paste -d " " id.eff <(helical euler print sol_3_0) >> Results/AnimalEffectsFAT2
+paste -d " " id.eff <(helical euler print sol_3_0) | awk '{printf "%s %.3f\n",$1,$2}' >> Results/AnimalEffectsFAT2
 
 #to write results in the sorted pedigree order:
 echo "Animal Solution" > Results/AnimalEffectsFAT1.srt
-paste -d " " id.eff <(helical euler print sol_2_0) | sort >> Results/AnimalEffectsFAT1.srt
+paste -d " " id.eff <(helical euler print sol_2_0) | sort | awk '{printf "%s %.3f\n",$1,$2}' >> Results/AnimalEffectsFAT1.srt
 echo "Animal Solution" > Results/AnimalEffectsFAT2.srt
-paste -d " " id.eff <(helical euler print sol_3_0) | sort >> Results/AnimalEffectsFAT2.srt
+paste -d " " id.eff <(helical euler print sol_3_0) | sort | awk '{printf "%s %.3f\n",$1,$2}' >> Results/AnimalEffectsFAT2.srt
