@@ -52,7 +52,7 @@ EOF
 helical euler expr expr-G0
 
 # stack pedigree
-helical bolt pedstack -p pedigree -o ped_stk
+helical bolt pedstack pedigree ped_stk
 
 # generate Ainverse
 helical bolt invnrm -p ped_stk -v Ainv
