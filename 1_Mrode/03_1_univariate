@@ -7,33 +7,35 @@ mkdir 03_1_Univariate_anim
 cd 03_1_Univariate_anim
 
 # generate pedigree file
+# IDs can be left as in the textbook e.g. 1, 2 or can be strings e.g. anim001 or ID1 etc.
+
 echo "anim sire dam" > ped_head
 cat <<EOF > pedigree
-1 . .
-2 . .
-3 . .
-4 1 .
-5 3 2
-6 1 2
-7 4 5
-8 3 6
+anim001 . .
+anim002 . .
+anim003 . .
+anim004 anim001 .
+anim005 anim003 anim002
+anim006 anim001 anim002
+anim007 anim004 anim005
+anim008 anim003 anim006
 EOF
 
 # generate performance file
 echo "anim Sex WWG" > perf_head
 cat <<EOF > perf
-4 M 4.5
-5 F 2.9
-6 F 3.9
-7 M 3.5
-8 M 5.0
+anim004 M 4.5
+anim005 F 2.9
+anim006 F 3.9
+anim007 M 3.5
+anim008 M 5.0
 EOF
 
 # stack pedigree
-stack_ped pedigree ped_stk
+helical bolt pedstack pedigree ped_stk
 
-# generate Ainverse and calculate inbreeding
-invnrm -i ped_stk -a -o inbreed -v Ainv
+# generate Ainverse
+helical bolt invnrm -p ped_stk -v Ainv
 
 # vectors to generate X and Z
 awk '{print $1}' perf > id.dat 		# animals with phenotypes
@@ -60,16 +62,13 @@ alpha=$(echo 2)
 
 # create LHS and RHS matrices
 cat << EOF > expr-lhs-rhs
-X00X00 = X00' * X00
-X00Z00 = X00' * Z00
-Z00Z00 = Z00' * Z00
-rhs.0 = X00' * y0
-rhs.1 = Z00' * y0
-write("X00X00", X00X00)
-write("X00Z00", X00Z00)
-write("Z00Z00", Z00Z00)
-write("rhs.0", rhs.0)
-write("rhs.1", rhs.1)
+#lhs
+write("X00X00", X00' * X00)
+write("X00Z00", X00' * Z00)
+write("Z00Z00", Z00' * Z00)
+#rhs
+write("rhs.0", X00' * y0)
+write("rhs.1", Z00' * y0)
 EOF
 
 helical euler expr expr-lhs-rhs
@@ -95,7 +94,12 @@ cat sol
 # generate results files
 mkdir Results
 echo "Effect Solution" > Results/FixedEffects
-paste -d " " Sex.eff <(helical euler print sol_0_0) >> Results/FixedEffects # will be in a different order to textbook
+paste -d " " Sex.eff <(helical euler print sol_0_0) | awk '{printf "%s %.3f\n",$1,$2}' >> Results/FixedEffects # will be in a different order to textbook
 
+#results are in the stacked pedigree order
 echo "Animal Solution" > Results/AnimalEffects
-paste -d " " id.eff <(helical euler print sol_1_0) >> Results/AnimalEffects 
+paste -d " " id.eff <(helical euler print sol_1_0) | awk '{printf "%s %.3f\n",$1,$2}' >> Results/AnimalEffects 
+
+#to write results in the sorted pedigree order:
+echo "Animal Solution" > Results/AnimalEffects.srt
+paste -d " " id.eff <(helical euler print sol_1_0) | sort | awk '{printf "%s %.3f\n",$1,$2}' >> Results/AnimalEffects.srt 

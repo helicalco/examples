@@ -7,43 +7,47 @@ mkdir 04_1_Repeatability
 cd 04_1_Repeatability
 
 # generate pedigree file
+# IDs can be left as in the textbook e.g. 1, 2 or can be strings e.g. anim001 or ID1 etc.
 echo "anim sire dam" > ped_head
 cat <<EOF > pedigree
-1 . .
-2 . .
-3 . .
-4 1 2
-5 3 2
-6 1 5
-7 3 4
-8 1 7
+anim001 . .
+anim002 . .
+anim003 . .
+anim004 anim001 anim002
+anim005 anim003 anim002
+anim006 anim001 anim005
+anim007 anim003 anim004
+anim008 anim001 anim007
 EOF
 
 # generate performance file
-# substitute A, B, C and D for HYS 1, 2, 3 and 4
 echo "anim Parity HYS Fat" > perf_head
 cat <<EOF > perf
-4 1 A 201
-4 2 C 280
-5 1 A 150
-5 2 D 200
-6 1 B 160
-6 2 C 190
-7 1 A 180
-7 2 C 250
-8 1 B 285
-8 2 D 300
+anim004 1 HerdA-year1 201
+anim004 2 HerdA-year3 280
+anim005 1 HerdA-year1 150
+anim005 2 HerdA-year4 200
+anim006 1 HerdA-year2 160
+anim006 2 HerdA-year3 190
+anim007 1 HerdA-year1 180
+anim007 2 HerdA-year3 250
+anim008 1 HerdA-year2 285
+anim008 2 HerdA-year4 300
 EOF
 
 # stack pedigree
-stack_ped pedigree ped_stk
+helical bolt pedstack pedigree ped_stk
 
-# generate Ainverse and calculate inbreeding
-invnrm -i ped_stk -a -o inbreed -v Ainv
+# generate Ainverse
+helical bolt invnrm -p ped_stk -v Ainv
 
 # vectors to generate X, Z and W
 awk '{print $1}' perf > id.dat 		# animals with phenotypes
-awk '{print $2}' perf > Parity 		# parities
+
+# add the word "Parity" before the parity number so in final result file it is clear what it is
+#could leave as is e.g. 'awk '{print $2}' perf > Parity' if preferred
+awk '{print "Parity-"$2}' perf > Parity 		# parities
+
 awk '{print $3}' perf > HYS 		# herd year season
 awk '{print $4}' perf > y0 			# phenotypes
 
@@ -51,7 +55,7 @@ awk '{print $4}' perf > y0 			# phenotypes
 awk '$1!="."{print $1}' Parity | sort -u > Parity.eff
 
 # vector of only HYS=B and HYS=D as we want to set HYS=A and HYS=C to zero
-printf '%s\n' 'B' 'D' > HYS.eff
+printf '%s\n' 'HerdA-year2' 'HerdA-year4' > HYS.eff
 
 # vector of animals in the pedigree
 awk '{print $1}' ped_stk > id.eff
@@ -76,26 +80,17 @@ alpha2=$(echo 2.333)
 
 cat << EOF > expr-lhs-rhs
 #LHS
-X00X00 = X00' * X00
-X00Z00 = X00' * Z00
-X00W00 = X00' * W00
-Z00Z00 = Z00' * Z00
-Z00W00 = Z00' * W00
-W00W00 = W00' * W00
-write("X00X00", X00X00)
-write("X00Z00", X00Z00)
-write("X00W00", X00W00)
-write("Z00Z00", Z00Z00)
-write("Z00W00", Z00W00)
-write("W00W00", W00W00)
+write("X00X00", X00' * X00)
+write("X00Z00", X00' * Z00)
+write("X00W00", X00' * W00)
+write("Z00Z00", Z00' * Z00)
+write("Z00W00", Z00' * W00)
+write("W00W00", W00' * W00)
 
 #RHS
-rhs.0 = X00' * y0
-rhs.1 = Z00' * y0
-rhs.2 = W00' * y0
-write("rhs.0", rhs.0)
-write("rhs.1", rhs.1)
-write("rhs.2", rhs.2)
+write("rhs.0", X00' * y0)
+write("rhs.1", Z00' * y0)
+write("rhs.2", W00' * y0)
 EOF
 
 helical euler expr expr-lhs-rhs
@@ -127,17 +122,23 @@ cat sol
 
 # generate results files
 mkdir Results
-#create file with zero for constrained HYS A and C
+#create file with zero for constrained HYS HerdA-year1 and HerdA-year3
 cat <<EOF > HYS_head
-A 0
-C 0
+HerdA-year1 0
+HerdA-year3 0
 EOF
 
 echo "Effect Solution" > Results/FixedEffects
-paste -d " " <(cat HYS.eff Parity.eff) <(helical euler print sol_0_0) | cat - HYS_head | sort >> Results/FixedEffects # remember we set HYS=A and HYS=C to zero
+paste -d " " <(cat HYS.eff Parity.eff) <(helical euler print sol_0_0) | cat - HYS_head | sort | awk '{printf "%s %.3f\n",$1,$2}' >> Results/FixedEffects # remember we set HYS=A and HYS=C to zero
 
+#results are in the stacked pedigree order
 echo "Animal Solution" > Results/AnimalEffects
-paste -d " " id.eff <(helical euler print sol_1_0) >> Results/AnimalEffects # slightly different order to textbook due to stacking pedigree
+paste -d " " id.eff <(helical euler print sol_1_0) | awk '{printf "%s %.3f\n",$1,$2}' >> Results/AnimalEffects 
 
+#to write results in the sorted pedigree order:
+echo "Animal Solution" > Results/AnimalEffects.srt
+paste -d " " id.eff <(helical euler print sol_1_0) | sort | awk '{printf "%s %.3f\n",$1,$2}' >> Results/AnimalEffects.srt 
+
+# PE effects
 echo "Animal Solution" > Results/AnimalPEEffects
-paste -d " " perf_id.eff <(helical euler print sol_2_0) >> Results/AnimalPEEffects
+paste -d " " perf_id.eff <(helical euler print sol_2_0) | awk '{printf "%s %.3f\n",$1,$2}' >> Results/AnimalPEEffects

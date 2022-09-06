@@ -7,26 +7,27 @@ mkdir 05_5_Multivar_anim
 cd 05_5_Multivar_anim
 
 # generate pedigree file
+# IDs can be left as in the textbook e.g. 1, 2 or can be strings e.g. anim001 or ID1 etc.
 echo "anim sire dam" > ped_head
 cat <<EOF > pedigree
-1 . .
-2 . .
-3 . .
-4 1 2
-5 3 2
-6 1 5
-7 3 4
-8 1 7
+anim001 . .
+anim002 . .
+anim003 . .
+anim004 anim001 anim002
+anim005 anim003 anim002
+anim006 anim001 anim005
+anim007 anim003 anim004
+anim008 anim001 anim007
 EOF
 
 # generate performance file
 echo "anim HYS1 HYS2 FAT1 FAT2" > perf_head
 cat <<EOF > perf
-4 1 1 201 280
-5 1 2 150 200
-6 2 1 160 190
-7 1 1 180 250
-8 2 2 285 300
+anim004 1 1 201 280
+anim005 1 2 150 200
+anim006 2 1 160 190
+anim007 1 1 180 250
+anim008 2 2 285 300
 EOF
 
 # generate genetic variance file
@@ -41,16 +42,20 @@ cat <<EOF > R0
 27 70
 EOF
 
-helical euler expr 'inv(G0)' -o G0inv
-export g11=$(helical euler print G0inv|  awk 'NR==1{print $1}')
-export g12=$(helical euler print G0inv|  awk 'NR==1{print $2}')
-export g22=$(helical euler print G0inv|  awk 'NR==2{print $2}')
+cat << EOF > expr-G0
+G0inv = inv(G0)
+write("g11", G0inv[1;1])
+write("g12", G0inv[1;2])
+write("g22", G0inv[2;2])
+EOF
+
+helical euler expr expr-G0
 
 # stack pedigree
-stack_ped pedigree ped_stk
+helical bolt pedstack pedigree ped_stk
 
-# generate Ainverse and calculate inbreeding
-invnrm -i ped_stk -a -o inbreed -v Ainv
+# generate Ainverse 
+helical bolt invnrm -p ped_stk -v Ainv
 
 # vectors to generate X and Z and Z.s
 awk '{print $1}' perf > id.dat.1 # animals with phenotypes
@@ -79,61 +84,41 @@ helical euler zgen -d HYS2 -e HYS2.eff -r y2 -o X2
 helical euler zgen -d id.dat.1 -e id.eff -r y1 -o Z1
 helical euler zgen -d id.dat.2 -e id.eff -r y2 -o Z2
 
-cnewr  -S -R resid -r R0 y1 y2
-cnewr  -S -R genet -r G0 y1 y2
+helical euler invR -S -R resid -r R0 y1 y2
 
 # create LHS and RHS matrices
 cat << EOF > expr-lhs-rhs
 # create LHS matrices
-X1RX1 = X1' * resid11 * X1
-X1RX2 = X1' * resid12 * X2
-X2RX1 = X2' * resid12 * X1
-X2RX2 = X2' * resid22 * X2
+write("X1RX1", X1' * resid11 * X1)
+write("X1RX2", X1' * resid12 * X2)
+write("X2RX1", X2' * resid12 * X1)
+write("X2RX2", X2' * resid22 * X2)
 
-X1RZ1 = X1' * resid11 * Z1
-X1RZ2 = X1' * resid12 * Z2
-X2RZ1 = X2' * resid12 * Z1
-X2RZ2 = X2' * resid22 * Z2
+write("X1RZ1", X1' * resid11 * Z1)
+write("X1RZ2", X1' * resid12 * Z2)
+write("X2RZ1", X2' * resid12 * Z1)
+write("X2RZ2", X2' * resid22 * Z2)
 
-Z1RZ1 = Z1' * resid11 * Z1
-Z1RZ2 = Z1' * resid12 * Z2
-Z2RZ1 = Z2' * resid12 * Z1
-Z2RZ2 = Z2' * resid22 * Z2
-
-write("X1RX1", X1RX1)
-write("X1RX2", X1RX2)
-write("X2RX1", X2RX1)
-write("X2RX2", X2RX2)
-
-write("X1RZ1", X1RZ1)
-write("X1RZ2", X1RZ2)
-write("X2RZ1", X2RZ1)
-write("X2RZ2", X2RZ2)
-
-write("Z1RZ1", Z1RZ1)
-write("Z1RZ2", Z1RZ2)
-write("Z2RZ1", Z2RZ1)
-write("Z2RZ2", Z2RZ2)
+write("Z1RZ1", Z1' * resid11 * Z1)
+write("Z1RZ2", Z1' * resid12 * Z2)
+write("Z2RZ1", Z2' * resid12 * Z1)
+write("Z2RZ2", Z2' * resid22 * Z2)
 
 # create RHS vectors
 X1Ry1 = X1' * resid11 * y1
 X2Ry1 = X2' * resid12 * y1
 X1Ry2 = X1' * resid12 * y2
-X2Ry2 = X2' * resid22 * y2
-rhs.0 = X1Ry1 + X1Ry2 #HYS effects FAT1
-rhs.1 = X2Ry1 + X2Ry2 #HYS effects FAT2
+X2Ry2 = X2' * resid22 * y2 
 
 Z1Ry1 = Z1' * resid11 * y1
 Z2Ry1 = Z2' * resid12 * y1
 Z1Ry2 = Z1' * resid12 * y2
 Z2Ry2 = Z2' * resid22 * y2
-rhs.2 = Z1Ry1 + Z1Ry2 #BV FAT1
-rhs.3 = Z2Ry1 + Z2Ry2 #BV FAT2
 
-write("rhs.0", rhs.0)
-write("rhs.1", rhs.1)
-write("rhs.2", rhs.2)
-write("rhs.3", rhs.3)
+write("rhs.0", X1Ry1 + X1Ry2) #HYS effects FAT1
+write("rhs.1", X2Ry1 + X2Ry2) #HYS effects FAT2
+write("rhs.2", Z1Ry1 + Z1Ry2) #BV FAT1
+write("rhs.3", Z2Ry1 + Z2Ry2) #BV FAT2
 EOF
 
 helical euler expr expr-lhs-rhs
@@ -142,8 +127,8 @@ helical euler expr expr-lhs-rhs
 echo "MAP
 X1RX1   X1RX2   X1RZ1          X1RZ2
 sym     X2RX2   X2RZ1          X2RZ2
-sym     sym     Z1RZ1+Ainv*$g11 Z2RZ1+Ainv*$g12
-sym     sym     sym            Z2RZ2+Ainv*$g22" > lhsmap
+sym     sym     Z1RZ1+Ainv*g11 Z2RZ1+Ainv*g12
+sym     sym     sym            Z2RZ2+Ainv*g22" > lhsmap
 
 # set up RHS
 echo "MAP
@@ -158,10 +143,24 @@ helical euler pcg lhsmap rhsmap sol -n 100
 # generate results files
 mkdir Results
 echo "Effect Solution" > Results/FixedEffectsFAT1
-paste -d " " HYS1.eff <(helical euler print sol_0_0) >> Results/FixedEffectsFAT1 
+paste -d " " HYS1.eff <(helical euler print sol_0_0) | awk '{printf "%s %.3f\n",$1,$2}' >> Results/FixedEffectsFAT1 
 echo "Effect Solution" > Results/FixedEffectsFAT2
-paste -d " " HYS2.eff <(helical euler print sol_1_0) >> Results/FixedEffectsFAT2
+paste -d " " HYS2.eff <(helical euler print sol_1_0) | awk '{printf "%s %.3f\n",$1,$2}' >> Results/FixedEffectsFAT2
+
+#generate one fixed effects file instead of two with labels for WWG or PWG sec effects
+echo "Effect Solution" > Results/FixedEffects
+paste -d " " <(awk '{print $1"-HYS1"}' HYS1.eff) <(helical euler print sol_0_0) | awk '{printf "%s %.3f\n",$1,$2}' >> Results/FixedEffects
+paste -d " " <(awk '{print $1"-HYS2"}' HYS2.eff) <(helical euler print sol_1_0) | awk '{printf "%s %.3f\n",$1,$2}' >> Results/FixedEffects
+
+
+# results in stacked pedigree order
 echo "Animal Solution" > Results/AnimalEffectsFAT1
-paste -d " " id.eff <(helical euler print sol_2_0) >> Results/AnimalEffectsFAT1
+paste -d " " id.eff <(helical euler print sol_2_0) | awk '{printf "%s %.3f\n",$1,$2}' >> Results/AnimalEffectsFAT1
 echo "Animal Solution" > Results/AnimalEffectsFAT2
-paste -d " " id.eff <(helical euler print sol_3_0) >> Results/AnimalEffectsFAT2
+paste -d " " id.eff <(helical euler print sol_3_0) | awk '{printf "%s %.3f\n",$1,$2}' >> Results/AnimalEffectsFAT2
+
+#to write results in the sorted pedigree order:
+echo "Animal Solution" > Results/AnimalEffectsFAT1.srt
+paste -d " " id.eff <(helical euler print sol_2_0) | sort | awk '{printf "%s %.3f\n",$1,$2}' >> Results/AnimalEffectsFAT1.srt
+echo "Animal Solution" > Results/AnimalEffectsFAT2.srt
+paste -d " " id.eff <(helical euler print sol_3_0) | sort | awk '{printf "%s %.3f\n",$1,$2}' >> Results/AnimalEffectsFAT2.srt
