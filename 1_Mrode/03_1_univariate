@@ -30,10 +30,10 @@ cat <<EOF > perf
 EOF
 
 # stack pedigree
-stack_ped pedigree ped_stk
+helical bolt pedstack -p pedigree -o ped_stk
 
-# generate Ainverse and calculate inbreeding
-invnrm -i ped_stk -a -o inbreed -v Ainv
+# generate Ainverse
+helical bolt invnrm -p ped_stk -v Ainv
 
 # vectors to generate X and Z
 awk '{print $1}' perf > id.dat 		# animals with phenotypes
@@ -60,16 +60,13 @@ alpha=$(echo 2)
 
 # create LHS and RHS matrices
 cat << EOF > expr-lhs-rhs
-X00X00 = X00' * X00
-X00Z00 = X00' * Z00
-Z00Z00 = Z00' * Z00
-rhs.0 = X00' * y0
-rhs.1 = Z00' * y0
-write("X00X00", X00X00)
-write("X00Z00", X00Z00)
-write("Z00Z00", Z00Z00)
-write("rhs.0", rhs.0)
-write("rhs.1", rhs.1)
+#lhs
+write("X00X00", X00' * X00)
+write("X00Z00", X00' * Z00)
+write("Z00Z00", Z00' * Z00)
+#rhs
+write("rhs.0", X00' * y0)
+write("rhs.1", Z00' * y0)
 EOF
 
 helical euler expr expr-lhs-rhs
@@ -97,5 +94,10 @@ mkdir Results
 echo "Effect Solution" > Results/FixedEffects
 paste -d " " Sex.eff <(helical euler print sol_0_0) >> Results/FixedEffects # will be in a different order to textbook
 
+#results are in the stacked pedigree order
 echo "Animal Solution" > Results/AnimalEffects
 paste -d " " id.eff <(helical euler print sol_1_0) >> Results/AnimalEffects 
+
+#to write results in the sorted pedigree order:
+echo "Animal Solution" > Results/AnimalEffects.srt
+paste -d " " id.eff <(helical euler print sol_1_0) | sort >> Results/AnimalEffects.srt 
