@@ -85,7 +85,9 @@ write("X00Z00", X00' * Z00)
 write("X00W00", X00' * W00)
 write("Z00Z00", Z00' * Z00)
 write("Z00W00", Z00' * W00)
-write("W00W00", W00' * W00)
+W00W00 = W00' * W00
+write("W00W00", W00W00)
+write("I",ident(W00W00))
 
 #RHS
 write("rhs.0", X00' * y0)
@@ -94,10 +96,6 @@ write("rhs.2", W00' * y0)
 EOF
 
 helical euler expr expr-lhs-rhs
-
-#create identity matrix with 5 rows and 5 cols for each anim with perf record
-nanim=$(wc -l perf_id.eff | awk '{print $1}')
-helical euler I $nanim -o I
 
 # set up LHS
 echo "MAP
