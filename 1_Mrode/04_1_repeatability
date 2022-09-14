@@ -3,8 +3,8 @@
 #                  Repeatability Example 4.1, pages 73 - 75                        #
 #                                                                                  #
 ####################################################################################
-mkdir 04_1_Repeatability
-cd 04_1_Repeatability
+mkdir 04_1_Repeatability_anim
+cd 04_1_Repeatability_anim
 
 # generate pedigree file
 # IDs can be left as in the textbook e.g. 1, 2 or can be strings e.g. anim001 or ID1 etc.
@@ -97,7 +97,7 @@ helical euler expr expr-lhs-rhs
 
 #create identity matrix with 5 rows and 5 cols for each anim with perf record
 nanim=$(wc -l perf_id.eff | awk '{print $1}')
-ident $nanim > I
+helical euler I $nanim -o I
 
 # set up LHS
 echo "MAP
