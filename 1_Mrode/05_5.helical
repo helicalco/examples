@@ -1,0 +1,34 @@
+# An example helical script for running a univariate PBLUP analysis using data from Mrode 05_5
+
+genetic = [ 35, 28,       # Don't forget the commas
+            28, 30 ]
+residual = [ 65, 27,
+             27, 70 ]
+FitMean = false
+
+
+[pedigree]
+path="/Users/dorian/Desktop/Mrode/05_5_Multivar_anim/pedigree"
+fields=[ "anim", "sire", "dam" ]
+
+[performance]
+path="/Users/dorian/Desktop/Mrode/05_5_Multivar_anim/perf"
+fields=[ "anim", "HYS_1", "HYS_2", "Fat_1", "Fat_2" ]
+
+[model]
+Fat_1 = "HYS_1 + anim(nrm(anim sire dam))"      # the (anim sire dam) is only needed once
+Fat_2 = "HYS_2 + anim(nrm)"                     # nrm indicates a pedigree-based var-cov matrix
+
+[pcg]
+rounds= 2_000
+tolerance= 1e-15
+
+
+[gibbs]
+rounds = 11_000
+burnin = 1_000
+gpus = [ "0" ]
+seeds = [ 1234 ]
+attach = true
+expressions = "expressions"
+preload = "all"

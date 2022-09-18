@@ -1,0 +1,31 @@
+# An example helical script for running a univariate PBLUP analysis using data from Mrode 03_1
+
+genetic = [ 40 ]
+residual = [ 20 ]
+FitMean = false
+
+
+[pedigree]
+path="/Users/dorian/Desktop/Mrode/03_1_Univariate_anim/pedigree"
+fields=[ "id", "sire", "dam" ]
+
+[performance]
+path="/Users/dorian/Desktop/Mrode/03_1_Univariate_anim/perf"
+fields=[ "id", "sex", "trait" ]
+
+[model]
+trait = "sex + id(nrm(id sire dam))"
+
+[pcg]
+rounds= 2_000
+tolerance= 1e-15
+
+
+[gibbs]
+rounds = 11_000
+burnin = 1_000
+gpus = [ "0" ]
+seeds = [ 1234 ]
+attach = true
+expressions = "expressions"
+preload = "all"
