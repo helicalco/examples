@@ -1,10 +1,11 @@
+#!/bin/bash
 ####################################################################################
 #                                                                                  #
 #                  Univariate Example 3.1, pages 42 - 45                           #
 #                                                                                  #
 ####################################################################################
-mkdir 03_1_Univariate_anim
-cd 03_1_Univariate_anim
+mkdir -pv 03_1.run
+cd 03_1.run
 
 # generate pedigree file
 # IDs can be left as in the textbook e.g. 1, 2 or can be strings e.g. anim001 or ID1 etc.
@@ -87,19 +88,19 @@ rhs.1" > rhsmap
 helical euler pcg lhsmap rhsmap sol -n 100 
 
 # view MAP file of solutions
-cat sol
-# has file sol_0_0 for rhs.0 
-# has file sol_1_0 for rhs.1 
+cat sol.map
+# has file sol.rhs.0 for rhs.0 
+# has file sol.rhs.1 for rhs.1 
 
 # generate results files
-mkdir Results
-echo "Effect Solution" > Results/FixedEffects
-paste -d " " Sex.eff <(helical euler print sol_0_0) | awk '{printf "%s %.3f\n",$1,$2}' >> Results/FixedEffects # will be in a different order to textbook
+mkdir -pv results
+echo "Effect Solution" > results/FixedEffects
+paste -d " " Sex.eff <(helical euler print sol.rhs.0) | awk '{printf "%s %.3f\n",$1,$2}' >> results/FixedEffects # will be in a different order to textbook
 
 #results are in the stacked pedigree order
-echo "Animal Solution" > Results/AnimalEffects
-paste -d " " id.eff <(helical euler print sol_1_0) | awk '{printf "%s %.3f\n",$1,$2}' >> Results/AnimalEffects 
+echo "Animal Solution" > results/AnimalEffects
+paste -d " " id.eff <(helical euler print sol.rhs.1) | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalEffects 
 
 #to write results in the sorted pedigree order:
-echo "Animal Solution" > Results/AnimalEffects.srt
-paste -d " " id.eff <(helical euler print sol_1_0) | sort | awk '{printf "%s %.3f\n",$1,$2}' >> Results/AnimalEffects.srt 
+echo "Animal Solution" > results/AnimalEffects.srt
+paste -d " " id.eff <(helical euler print sol.rhs.1) | sort | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalEffects.srt 

@@ -1,4 +1,7 @@
 # An example helical script for running a univariate PBLUP analysis using data from Mrode 05_5
+# First run the 05_5_multivariate script to run the pre-existing bash scripts for that problem.
+# Then, cd into the 05_5.run directory and run `helical bolt model ../05_5.helical` to generate the end-to-end bash scripts using the model tool.
+# cd into the newly created scripts directory and run the runner to run the same model generated using only the parameter file below.
 
 genetic = [ 35, 28,       # Don't forget the commas
             28, 30 ]
@@ -8,11 +11,11 @@ FitMean = false
 
 
 [pedigree]
-path="/Users/dorian/Desktop/Mrode/05_5_Multivar_anim/pedigree"
+path="pedigree"
 fields=[ "anim", "sire", "dam" ]
 
 [performance]
-path="/Users/dorian/Desktop/Mrode/05_5_Multivar_anim/perf"
+path="perf"
 fields=[ "anim", "HYS_1", "HYS_2", "Fat_1", "Fat_2" ]
 
 [model]

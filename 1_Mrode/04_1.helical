@@ -1,4 +1,7 @@
 # An example helical script for running a univariate PBLUP analysis using data from Mrode 04_1
+# First run the 04_1_Repeatability script to run the pre-existing bash scripts for that problem.
+# Then, cd into the 04_1.run directory and run `helical bolt model ../04_1.helical` to generate the end-to-end bash scripts using the model tool.
+# cd into the newly created scripts directory and run the runner to run the same model generated using only the parameter file below.
 
 genetic  = [ 0.7142857 ]   # Note the float needs a leading 0 and not just .714
 id       = [ 0.42857 ]     # the name of this variance component is the same as that used in model
@@ -7,11 +10,11 @@ FitMean = false
 
 
 [pedigree]
-path="/Users/dorian/Desktop/Mrode/04_1_Repeatability_anim/pedigree"
+path="pedigree"
 fields=[ "id", "sire", "dam" ]
 
 [performance]
-path="/Users/dorian/Desktop/Mrode/04_1_Repeatability_anim/perf"
+path="perf"
 fields=[ "id", "parity", "hys", "Fat" ]
 
 [model]

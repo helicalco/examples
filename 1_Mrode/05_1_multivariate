@@ -1,10 +1,11 @@
+#!/bin/bash
 ####################################################################################
 #                                                                                  #
 #                  Multivariate Example 5.1, pages 85 - 88                         #
 #                                                                                  #
 ####################################################################################
-mkdir 05_1_Multivar_anim
-cd 05_1_Multivar_anim
+mkdir -pv 05_1.run
+cd 05_1.run
 
 # generate pedigree file
 # IDs can be left as in the textbook e.g. 1, 2 or can be strings e.g. anim001 or ID1 etc.
@@ -138,26 +139,26 @@ rhs.3" > rhsmap
 helical euler pcg lhsmap rhsmap sol -n 100 
 
 # generate results files
-mkdir Results
-echo "Effect Solution" > Results/FixedEffectsWWG
-paste -d " " Sex.eff <(helical euler print sol_0_0) | awk '{printf "%s %.3f\n",$1,$2}' >> Results/FixedEffectsWWG # will be in a different order to textbook
-echo "Effect Solution" > Results/FixedEffectsPWG
-paste -d " " Sex.eff <(helical euler print sol_1_0) | awk '{printf "%s %.3f\n",$1,$2}' >> Results/FixedEffectsPWG
+mkdir -pv results
+echo "Effect Solution" > results/FixedEffectsWWG
+paste -d " " Sex.eff <(helical euler print sol.rhs.0) | awk '{printf "%s %.3f\n",$1,$2}' >> results/FixedEffectsWWG # will be in a different order to textbook
+echo "Effect Solution" > results/FixedEffectsPWG
+paste -d " " Sex.eff <(helical euler print sol.rhs.1) | awk '{printf "%s %.3f\n",$1,$2}' >> results/FixedEffectsPWG
 
 #generate one fixed effects file instead of two with labels for WWG or PWG sec effects
-echo "Effect Solution" > Results/FixedEffects
-paste -d " " <(awk '{print $1"-WWG"}' Sex.eff) <(helical euler print sol_0_0) | awk '{printf "%s %.3f\n",$1,$2}' >> Results/FixedEffects
-paste -d " " <(awk '{print $1"-PWG"}' Sex.eff) <(helical euler print sol_1_0) | awk '{printf "%s %.3f\n",$1,$2}' >> Results/FixedEffects
+echo "Effect Solution" > results/FixedEffects
+paste -d " " <(awk '{print $1"-WWG"}' Sex.eff) <(helical euler print sol.rhs.0) | awk '{printf "%s %.3f\n",$1,$2}' >> results/FixedEffects
+paste -d " " <(awk '{print $1"-PWG"}' Sex.eff) <(helical euler print sol.rhs.1) | awk '{printf "%s %.3f\n",$1,$2}' >> results/FixedEffects
 
 
 #results are in stacked pedigree order by default
-echo "Animal Solution" > Results/AnimalEffectsWWG
-paste -d " " id.eff <(helical euler print sol_2_0) | awk '{printf "%s %.3f\n",$1,$2}' >> Results/AnimalEffectsWWG
-echo "Animal Solution" > Results/AnimalEffectsPWG
-paste -d " " id.eff <(helical euler print sol_3_0) | awk '{printf "%s %.3f\n",$1,$2}' >> Results/AnimalEffectsPWG
+echo "Animal Solution" > results/AnimalEffectsWWG
+paste -d " " id.eff <(helical euler print sol.rhs.2) | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalEffectsWWG
+echo "Animal Solution" > results/AnimalEffectsPWG
+paste -d " " id.eff <(helical euler print sol.rhs.3) | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalEffectsPWG
 
 # results in ID sorted order
-echo "Animal Solution" > Results/AnimalEffectsWWG.srt
-paste -d " " id.eff <(helical euler print sol_2_0) | sort | awk '{printf "%s %.3f\n",$1,$2}' >> Results/AnimalEffectsWWG.srt
-echo "Animal Solution" > Results/AnimalEffectsPWG.srt
-paste -d " " id.eff <(helical euler print sol_3_0) | sort | awk '{printf "%s %.3f\n",$1,$2}' >> Results/AnimalEffectsPWG.srt
+echo "Animal Solution" > results/AnimalEffectsWWG.srt
+paste -d " " id.eff <(helical euler print sol.rhs.2) | sort | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalEffectsWWG.srt
+echo "Animal Solution" > results/AnimalEffectsPWG.srt
+paste -d " " id.eff <(helical euler print sol.rhs.3) | sort | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalEffectsPWG.srt

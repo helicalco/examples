@@ -3,8 +3,8 @@
 #                  Repeatability Example 4.1, pages 73 - 75                        #
 #                                                                                  #
 ####################################################################################
-mkdir 04_1_Repeatability_anim
-cd 04_1_Repeatability_anim
+mkdir 04_1.run
+cd 04_1.run
 
 # generate pedigree file
 # IDs can be left as in the textbook e.g. 1, 2 or can be strings e.g. anim001 or ID1 etc.
@@ -114,29 +114,29 @@ helical euler pcg lhsmap rhsmap sol -n 100
 
 # view MAP file of solutions
 cat sol
-# has file sol_0_0 for rhs.0 
-# has file sol_1_0 for rhs.1 
-# has file sol_2_0 for rhs.2
+# has file sol.rhs.0 for rhs.0 
+# has file sol.rhs.1 for rhs.1 
+# has file sol.rhs.2 for rhs.2
 
 # generate results files
-mkdir Results
+mkdir results
 #create file with zero for constrained HYS HerdA-year1 and HerdA-year3
 cat <<EOF > HYS_head
 HerdA-year1 0
 HerdA-year3 0
 EOF
 
-echo "Effect Solution" > Results/FixedEffects
-paste -d " " <(cat HYS.eff Parity.eff) <(helical euler print sol_0_0) | cat - HYS_head | sort | awk '{printf "%s %.3f\n",$1,$2}' >> Results/FixedEffects # remember we set HYS=A and HYS=C to zero
+echo "Effect Solution" > results/FixedEffects
+paste -d " " <(cat HYS.eff Parity.eff) <(helical euler print sol.rhs.0) | cat - HYS_head | sort | awk '{printf "%s %.3f\n",$1,$2}' >> results/FixedEffects # remember we set HYS=A and HYS=C to zero
 
 #results are in the stacked pedigree order
-echo "Animal Solution" > Results/AnimalEffects
-paste -d " " id.eff <(helical euler print sol_1_0) | awk '{printf "%s %.3f\n",$1,$2}' >> Results/AnimalEffects 
+echo "Animal Solution" > results/AnimalEffects
+paste -d " " id.eff <(helical euler print sol.rhs.1) | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalEffects 
 
 #to write results in the sorted pedigree order:
-echo "Animal Solution" > Results/AnimalEffects.srt
-paste -d " " id.eff <(helical euler print sol_1_0) | sort | awk '{printf "%s %.3f\n",$1,$2}' >> Results/AnimalEffects.srt 
+echo "Animal Solution" > results/AnimalEffects.srt
+paste -d " " id.eff <(helical euler print sol.rhs.1) | sort | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalEffects.srt 
 
 # PE effects
-echo "Animal Solution" > Results/AnimalPEEffects
-paste -d " " perf_id.eff <(helical euler print sol_2_0) | awk '{printf "%s %.3f\n",$1,$2}' >> Results/AnimalPEEffects
+echo "Animal Solution" > results/AnimalPEEffects
+paste -d " " perf_id.eff <(helical euler print sol.rhs.2) | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalPEEffects
