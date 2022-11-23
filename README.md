@@ -8,4 +8,4 @@ The Mrode directory houses various stand-alone examples from Mrode's textbook.
 
 ## Feedback and Enquiries
 
-We welcome any and all feedback and business enquiries, please open an issue here or contact Dan Garrick directory at dan@helicalco.com
+We welcome any and all feedback and business enquiries, please open an issue here or contact [Dan Garrick](mailto:dan@helicalco.com) directly.
