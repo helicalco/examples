@@ -86,7 +86,7 @@ helical euler zgen -d HYS2 -e HYS2.eff -r y2 -o X2
 helical euler zgen -d id.dat.1 -e id.eff -r y1 -o Z1
 helical euler zgen -d id.dat.2 -e id.eff -r y2 -o Z2
 
-helical euler invR -S -R resid -r R0 y1 y2
+helical euler invr -S -R resid -r R0 y1 y2
 
 # create LHS and RHS matrices
 cat << EOF > expr-lhs-rhs

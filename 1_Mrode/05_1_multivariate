@@ -79,7 +79,7 @@ helical euler zgen -d Sex -e Sex.eff -r y0 -o X00
 # create Z (no missing values so Z00 and Z01 are identical)
 helical euler zgen -d id.dat -e id.eff -r y0 -o Z00
 
-helical euler invR -S -R resid -r R0 y0 y1
+helical euler invr -S -R resid -r R0 y0 y1
 
 # create LHS and RHS matrices
 cat << EOF > expr-lhs-rhs
