@@ -1,7 +1,11 @@
-# An example helical script for running a univariate PBLUP analysis using data from Mrode 04_1
-# First run the 04_1_Repeatability script to run the pre-existing bash scripts for that problem.
-# Then, cd into the 04_1.run directory and run `helical bolt model ../04_1.helical` to generate the end-to-end bash scripts using the model tool.
-# cd into the newly created scripts directory and run the runner to run the same model generated using only the parameter file below.
+# An example helical script for running a univariate repeatability PBLUP analysis using data from Mrode 04_1
+# First run
+# `bash ./04_1_repeatability` to run the pre-existing bash scripts for that analysis.
+# Then to run the parameterised helical model on the same data:
+# `cd 04_1.run`
+# `helical bolt model ../04_1.helical` to generate the end-to-end bash scripts using the model tool and the parameter file (below).
+# `cd scripts`
+# `bash ./runner` to run the automatically generated model scripts.
 
 genetic  = [ 0.7142857 ]   # Note the float needs a leading 0 and not just .714
 id       = [ 0.42857 ]     # the name of this variance component is the same as that used in model
@@ -25,12 +29,3 @@ Fat = "parity + hys + id(nrm(id sire dam)) + id(ident)"
 rounds= 2_000
 tolerance= 1e-15
 
-
-[gibbs]
-rounds = 11_000
-burnin = 1_000
-gpus = [ "0" ]
-seeds = [ 1234 ]
-attach = true
-expressions = "expressions"
-preload = "all"

@@ -2,7 +2,8 @@
 Various examples of helical tool usage and linear modeling.
 
 ## Requirements
-Tested up to `helical version 0.9.12` - earlier versions may not work due to changes in tool syntax.
+Last updated for use with `helical version 1.0.60`.
+Use the latest helical version via `helical update` or if having issues please upgrade/downgrade to the tested helical version with `helical update -v 1.0.60`.
 
 ## Repository
 https://github.com/helicalco/examples

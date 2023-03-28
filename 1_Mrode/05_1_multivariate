@@ -61,8 +61,8 @@ helical bolt invnrm -p ped_stk -v Ainv
 # vectors to generate X and Z
 awk '{print $1}' perf > id.dat 		# animals with phenotypes
 awk '{print $2}' perf > Sex 		# sex
-awk '{print $3}' perf > y0 			# WWG phenotypes
-awk '{print $4}' perf > y1 			# PWG phenotypes
+awk '{print $3}' perf > y1 			# WWG phenotypes
+awk '{print $4}' perf > y2 			# PWG phenotypes
 
 # vectors for levels of each fixed effect
 awk '$1!="."{print $1}' Sex | sort -u > Sex.eff
@@ -73,50 +73,50 @@ awk '{print $1}' ped_stk > id.eff
 # vector of unique animals in the performance file
 awk '$1!="."{print $1}' id.dat | sort -u > perf_id.eff
 
-# create X (no missing values so X00 and X01 are identical)
-helical euler zgen -d Sex -e Sex.eff -r y0 -o X00
+# create X (no missing values so X11 and X12 are identical)
+helical euler zgen -d Sex -e Sex.eff -r y1 -o X11
 
-# create Z (no missing values so Z00 and Z01 are identical)
-helical euler zgen -d id.dat -e id.eff -r y0 -o Z00
+# create Z (no missing values so Z11 and Z12 are identical)
+helical euler zgen -d id.dat -e id.eff -r y1 -o Z11
 
-helical euler invr -S -R resid -r R0 y0 y1
+helical euler invr -S -R resid -r R0 y1 y2
 
 # create LHS and RHS matrices
 cat << EOF > expr-lhs-rhs
 #lhs
-write("X1RX1", X00' * resid11 * X00)
-write("X1RX2", X00' * resid12 * X00)
-write("X2RX2", X00' * resid22 * X00)
+write("X1RX1", X11' * resid11 * X11)
+write("X1RX2", X11' * resid12 * X11)
+write("X2RX2", X11' * resid22 * X11)
 
-write("X1RZ1", X00' * resid11 * Z00)
-write("X1RZ2", X00' * resid12 * Z00)
-write("X2RZ1", X00' * resid12 * Z00)
-write("X2RZ2", X00' * resid22 * Z00)
+write("X1RZ1", X11' * resid11 * Z11)
+write("X1RZ2", X11' * resid12 * Z11)
+write("X2RZ1", X11' * resid12 * Z11)
+write("X2RZ2", X11' * resid22 * Z11)
 
-write("Z1RZ1", Z00' * resid11 * Z00)
-write("Z1RZ2", Z00' * resid12 * Z00)
-write("Z2RZ1", Z00' * resid12 * Z00)
-write("Z2RZ2", Z00' * resid22 * Z00)
+write("Z1RZ1", Z11' * resid11 * Z11)
+write("Z1RZ2", Z11' * resid12 * Z11)
+write("Z2RZ1", Z11' * resid12 * Z11)
+write("Z2RZ2", Z11' * resid22 * Z11)
 
 #rhs
-X1Ry1 = X00' * resid11 * y0
-X2Ry1 = X00' * resid12 * y0
-X1Ry2 = X00' * resid12 * y1
-X2Ry2 = X00' * resid22 * y1
+X1Ry1 = X11' * resid11 * y1
+X2Ry1 = X11' * resid12 * y1
+X1Ry2 = X11' * resid12 * y2
+X2Ry2 = X11' * resid22 * y2
 
-Z1Ry1 = Z00' * resid11 * y0
-Z2Ry1 = Z00' * resid12 * y0
-Z1Ry2 = Z00' * resid12 * y1
-Z2Ry2 = Z00' * resid22 * y1
+Z1Ry1 = Z11' * resid11 * y1
+Z2Ry1 = Z11' * resid12 * y1
+Z1Ry2 = Z11' * resid12 * y2
+Z2Ry2 = Z11' * resid22 * y2
 
 #sex effects WWG
-write("rhs.0", X1Ry1 + X1Ry2 )
+write("rhs.1", X1Ry2 + X1Ry2 )
 #sex effects PWG
-write("rhs.1", X2Ry1 + X2Ry2 )
+write("rhs.2", X2Ry2 + X2Ry2 )
 #BV WWG
-write("rhs.2", Z1Ry1 + Z1Ry2 )
+write("rhs.3", Z1Ry2 + Z1Ry2 )
 #BV PWG
-write("rhs.3", Z2Ry1 + Z2Ry2 )
+write("rhs.4", Z2Ry2 + Z2Ry2 )
 EOF
 
 helical euler expr expr-lhs-rhs
@@ -130,10 +130,10 @@ sym     sym     sym            Z2RZ2+Ainv*g22" > lhsmap
 
 # set up RHS
 echo "MAP
-rhs.0
 rhs.1
 rhs.2
-rhs.3" > rhsmap
+rhs.3
+rhs.4" > rhsmap
 
 # solve!
 helical euler pcg lhsmap rhsmap sol -n 100 
@@ -141,24 +141,24 @@ helical euler pcg lhsmap rhsmap sol -n 100
 # generate results files
 mkdir -pv results
 echo "Effect Solution" > results/FixedEffectsWWG
-paste -d " " Sex.eff <(helical euler print sol.rhs.0) | awk '{printf "%s %.3f\n",$1,$2}' >> results/FixedEffectsWWG # will be in a different order to textbook
+paste -d " " Sex.eff <(helical euler print sol.rhs.1) | awk '{printf "%s %.3f\n",$1,$2}' >> results/FixedEffectsWWG # will be in a different order to textbook
 echo "Effect Solution" > results/FixedEffectsPWG
-paste -d " " Sex.eff <(helical euler print sol.rhs.1) | awk '{printf "%s %.3f\n",$1,$2}' >> results/FixedEffectsPWG
+paste -d " " Sex.eff <(helical euler print sol.rhs.2) | awk '{printf "%s %.3f\n",$1,$2}' >> results/FixedEffectsPWG
 
 #generate one fixed effects file instead of two with labels for WWG or PWG sec effects
 echo "Effect Solution" > results/FixedEffects
-paste -d " " <(awk '{print $1"-WWG"}' Sex.eff) <(helical euler print sol.rhs.0) | awk '{printf "%s %.3f\n",$1,$2}' >> results/FixedEffects
-paste -d " " <(awk '{print $1"-PWG"}' Sex.eff) <(helical euler print sol.rhs.1) | awk '{printf "%s %.3f\n",$1,$2}' >> results/FixedEffects
+paste -d " " <(awk '{print $1"-WWG"}' Sex.eff) <(helical euler print sol.rhs.1) | awk '{printf "%s %.3f\n",$1,$2}' >> results/FixedEffects
+paste -d " " <(awk '{print $1"-PWG"}' Sex.eff) <(helical euler print sol.rhs.2) | awk '{printf "%s %.3f\n",$1,$2}' >> results/FixedEffects
 
 
 #results are in stacked pedigree order by default
 echo "Animal Solution" > results/AnimalEffectsWWG
-paste -d " " id.eff <(helical euler print sol.rhs.2) | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalEffectsWWG
+paste -d " " id.eff <(helical euler print sol.rhs.3) | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalEffectsWWG
 echo "Animal Solution" > results/AnimalEffectsPWG
-paste -d " " id.eff <(helical euler print sol.rhs.3) | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalEffectsPWG
+paste -d " " id.eff <(helical euler print sol.rhs.4) | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalEffectsPWG
 
 # results in ID sorted order
 echo "Animal Solution" > results/AnimalEffectsWWG.srt
-paste -d " " id.eff <(helical euler print sol.rhs.2) | sort | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalEffectsWWG.srt
+paste -d " " id.eff <(helical euler print sol.rhs.3) | sort | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalEffectsWWG.srt
 echo "Animal Solution" > results/AnimalEffectsPWG.srt
-paste -d " " id.eff <(helical euler print sol.rhs.3) | sort | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalEffectsPWG.srt
+paste -d " " id.eff <(helical euler print sol.rhs.4) | sort | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalEffectsPWG.srt

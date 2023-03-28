@@ -117,10 +117,10 @@ Z2Ry1 = Z2' * resid12 * y1
 Z1Ry2 = Z1' * resid12 * y2
 Z2Ry2 = Z2' * resid22 * y2
 
-write("rhs.0", X1Ry1 + X1Ry2) #HYS effects FAT1
-write("rhs.1", X2Ry1 + X2Ry2) #HYS effects FAT2
-write("rhs.2", Z1Ry1 + Z1Ry2) #BV FAT1
-write("rhs.3", Z2Ry1 + Z2Ry2) #BV FAT2
+write("rhs.1", X1Ry1 + X1Ry2) #HYS effects FAT1
+write("rhs.2", X2Ry1 + X2Ry2) #HYS effects FAT2
+write("rhs.3", Z1Ry1 + Z1Ry2) #BV FAT1
+write("rhs.4", Z2Ry1 + Z2Ry2) #BV FAT2
 EOF
 
 helical euler expr expr-lhs-rhs
@@ -134,10 +134,10 @@ sym     sym     sym            Z2RZ2+Ainv*g22" > lhsmap
 
 # set up RHS
 echo "MAP
-rhs.0
 rhs.1
 rhs.2
-rhs.3" > rhsmap
+rhs.3
+rhs.4" > rhsmap
 
 # solve!
 helical euler pcg lhsmap rhsmap sol -n 100 
@@ -145,24 +145,24 @@ helical euler pcg lhsmap rhsmap sol -n 100
 # generate results files
 mkdir -pv results
 echo "Effect Solution" > results/FixedEffectsFAT1
-paste -d " " HYS1.eff <(helical euler print sol.rhs.0) | awk '{printf "%s %.3f\n",$1,$2}' >> results/FixedEffectsFAT1 
+paste -d " " HYS1.eff <(helical euler print sol.rhs.1) | awk '{printf "%s %.3f\n",$1,$2}' >> results/FixedEffectsFAT1 
 echo "Effect Solution" > results/FixedEffectsFAT2
-paste -d " " HYS2.eff <(helical euler print sol.rhs.1) | awk '{printf "%s %.3f\n",$1,$2}' >> results/FixedEffectsFAT2
+paste -d " " HYS2.eff <(helical euler print sol.rhs.2) | awk '{printf "%s %.3f\n",$1,$2}' >> results/FixedEffectsFAT2
 
 #generate one fixed effects file instead of two with labels for WWG or PWG sec effects
 echo "Effect Solution" > results/FixedEffects
-paste -d " " <(awk '{print $1"-HYS1"}' HYS1.eff) <(helical euler print sol.rhs.0) | awk '{printf "%s %.3f\n",$1,$2}' >> results/FixedEffects
-paste -d " " <(awk '{print $1"-HYS2"}' HYS2.eff) <(helical euler print sol.rhs.1) | awk '{printf "%s %.3f\n",$1,$2}' >> results/FixedEffects
+paste -d " " <(awk '{print $1"-HYS1"}' HYS1.eff) <(helical euler print sol.rhs.1) | awk '{printf "%s %.3f\n",$1,$2}' >> results/FixedEffects
+paste -d " " <(awk '{print $1"-HYS2"}' HYS2.eff) <(helical euler print sol.rhs.2) | awk '{printf "%s %.3f\n",$1,$2}' >> results/FixedEffects
 
 
 # results in stacked pedigree order
 echo "Animal Solution" > results/AnimalEffectsFAT1
-paste -d " " id.eff <(helical euler print sol.rhs.2) | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalEffectsFAT1
+paste -d " " id.eff <(helical euler print sol.rhs.3) | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalEffectsFAT1
 echo "Animal Solution" > results/AnimalEffectsFAT2
-paste -d " " id.eff <(helical euler print sol.rhs.3) | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalEffectsFAT2
+paste -d " " id.eff <(helical euler print sol.rhs.4) | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalEffectsFAT2
 
 #to write results in the sorted pedigree order:
 echo "Animal Solution" > results/AnimalEffectsFAT1.srt
-paste -d " " id.eff <(helical euler print sol.rhs.2) | sort | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalEffectsFAT1.srt
+paste -d " " id.eff <(helical euler print sol.rhs.3) | sort | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalEffectsFAT1.srt
 echo "Animal Solution" > results/AnimalEffectsFAT2.srt
-paste -d " " id.eff <(helical euler print sol.rhs.3) | sort | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalEffectsFAT2.srt
+paste -d " " id.eff <(helical euler print sol.rhs.4) | sort | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalEffectsFAT2.srt

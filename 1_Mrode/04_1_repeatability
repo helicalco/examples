@@ -49,7 +49,7 @@ awk '{print $1}' perf > id.dat 		# animals with phenotypes
 awk '{print "Parity-"$2}' perf > Parity 		# parities
 
 awk '{print $3}' perf > HYS 		# herd year season
-awk '{print $4}' perf > y0 			# phenotypes
+awk '{print $4}' perf > y1 			# phenotypes
 
 # vectors for levels of each fixed effect
 awk '$1!="."{print $1}' Parity | sort -u > Parity.eff
@@ -64,15 +64,15 @@ awk '{print $1}' ped_stk > id.eff
 awk '$1!="."{print $1}' id.dat | sort -u > perf_id.eff
 
 # create X
-helical euler zgen -d Parity -e Parity.eff -r y0 -o Xparity
-helical euler zgen -d HYS -e HYS.eff -r y0 -o XHYS
-helical euler chcat XHYS Xparity X00
+helical euler zgen -d Parity -e Parity.eff -r y1 -o Xparity
+helical euler zgen -d HYS -e HYS.eff -r y1 -o XHYS
+helical euler chcat XHYS Xparity X11
 
 # create Z
-helical euler zgen -d id.dat -e id.eff -r y0 -o Z00
+helical euler zgen -d id.dat -e id.eff -r y1 -o Z11
 
 # create W
-helical euler zgen -d id.dat -e perf_id.eff -r y0 -o W00
+helical euler zgen -d id.dat -e perf_id.eff -r y1 -o W11
 
 #from page 73, alpha1 = 1.4 and alpha2 = 2.333
 alpha1=$(echo 1.4)
@@ -80,43 +80,43 @@ alpha2=$(echo 2.333)
 
 cat << EOF > expr-lhs-rhs
 #LHS
-write("X00X00", X00' * X00)
-write("X00Z00", X00' * Z00)
-write("X00W00", X00' * W00)
-write("Z00Z00", Z00' * Z00)
-write("Z00W00", Z00' * W00)
-W00W00 = W00' * W00
-write("W00W00", W00W00)
-write("I",ident(W00W00))
+write("X11X11", X11' * X11)
+write("X11Z11", X11' * Z11)
+write("X11W11", X11' * W11)
+write("Z11Z11", Z11' * Z11)
+write("Z11W11", Z11' * W11)
+W11W11 = W11' * W11
+write("W11W11", W11W11)
+write("I",ident(W11W11))
 
 #RHS
-write("rhs.0", X00' * y0)
-write("rhs.1", Z00' * y0)
-write("rhs.2", W00' * y0)
+write("rhs.1", X11' * y1)
+write("rhs.2", Z11' * y1)
+write("rhs.3", W11' * y1)
 EOF
 
 helical euler expr expr-lhs-rhs
 
 # set up LHS
 echo "MAP
-X00X00 X00Z00 X00W00
-sym Z00Z00+Ainv*$alpha1 Z00W00
-sym sym W00W00+I*$alpha2" > lhsmap
+X11X11 X11Z11 X11W11
+sym Z11Z11+Ainv*$alpha1 Z11W11
+sym sym W11W11+I*$alpha2" > lhsmap
 
 # set up RHS
 echo "MAP
-rhs.0
 rhs.1
-rhs.2" > rhsmap
+rhs.2
+rhs.3" > rhsmap
 
 # solve!
 helical euler pcg lhsmap rhsmap sol -n 100 
 
 # view MAP file of solutions
-cat sol
-# has file sol.rhs.0 for rhs.0 
-# has file sol.rhs.1 for rhs.1 
-# has file sol.rhs.2 for rhs.2
+cat sol.map
+# has file sol.rhs.1 for rhs.1
+# has file sol.rhs.2 for rhs.2 
+# has file sol.rhs.3 for rhs.3
 
 # generate results files
 mkdir results
@@ -127,16 +127,16 @@ HerdA-year3 0
 EOF
 
 echo "Effect Solution" > results/FixedEffects
-paste -d " " <(cat HYS.eff Parity.eff) <(helical euler print sol.rhs.0) | cat - HYS_head | sort | awk '{printf "%s %.3f\n",$1,$2}' >> results/FixedEffects # remember we set HYS=A and HYS=C to zero
+paste -d " " <(cat HYS.eff Parity.eff) <(helical euler print sol.rhs.1) | cat - HYS_head | sort | awk '{printf "%s %.3f\n",$1,$2}' >> results/FixedEffects # remember we set HYS=A and HYS=C to zero
 
 #results are in the stacked pedigree order
 echo "Animal Solution" > results/AnimalEffects
-paste -d " " id.eff <(helical euler print sol.rhs.1) | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalEffects 
+paste -d " " id.eff <(helical euler print sol.rhs.2) | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalEffects 
 
 #to write results in the sorted pedigree order:
 echo "Animal Solution" > results/AnimalEffects.srt
-paste -d " " id.eff <(helical euler print sol.rhs.1) | sort | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalEffects.srt 
+paste -d " " id.eff <(helical euler print sol.rhs.2) | sort | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalEffects.srt 
 
 # PE effects
 echo "Animal Solution" > results/AnimalPEEffects
-paste -d " " perf_id.eff <(helical euler print sol.rhs.2) | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalPEEffects
+paste -d " " perf_id.eff <(helical euler print sol.rhs.3) | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalPEEffects
