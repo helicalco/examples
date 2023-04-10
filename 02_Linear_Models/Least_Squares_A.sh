@@ -94,4 +94,4 @@ he print bhat.map
 # he print bhat.Xpy
 
 echo "L2 error between bhat from pcg to exact bhat:"
-he diff bhat.precon.map bhat
+he diff bhat.map bhat
