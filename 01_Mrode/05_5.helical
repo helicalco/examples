@@ -1,0 +1,31 @@
+# An example helical script for running a univariate PBLUP analysis using data from Mrode 05_5
+# First run
+# `bash ./05_5_multivariate` to run the pre-existing bash scripts for that analysis.
+# Then to run the parameterised helical model on the same data:
+# `cd 05_5.run`
+# `helical bolt model ../05_5.helical` to generate the end-to-end bash scripts using the model tool and the parameter file (below).
+# `cd scripts`
+# `bash ./runner` to run the automatically generated model scripts.
+
+genetic = [ 35, 28,       # Don't forget the commas
+            28, 30 ]
+residual = [ 65, 27,
+             27, 70 ]
+FitMean = false
+
+
+[pedigree]
+path="pedigree"
+fields=[ "anim", "sire", "dam" ]
+
+[performance]
+path="perf"
+fields=[ "anim", "HYS_1", "HYS_2", "Fat_1", "Fat_2" ]
+
+[model]
+Fat_1 = "HYS_1 + anim(nrm(anim sire dam))"      # the (anim sire dam) is only needed once
+Fat_2 = "HYS_2 + anim(nrm)"                     # nrm indicates a pedigree-based var-cov matrix
+
+[pcg]
+rounds= 2_000
+tolerance= 1e-15

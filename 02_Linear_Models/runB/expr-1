@@ -1,0 +1,14 @@
+XpX = X' * X
+XpXi = inv(XpX)
+Xpy = X' * y
+bhat= XpXi * Xpy
+yhat = X * bhat
+ehat = y - yhat
+sigma2_e_hat=(ehat' * ehat)/(16 - 2)
+var_hat_beta_hat = XpXi * sigma2_e_hat
+
+write("bhat", bhat)
+write("yhat", yhat)
+write("ehat", ehat)
+write("se_bhat", sqrt(diag(var_hat_beta_hat)) )
+

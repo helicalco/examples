@@ -1,0 +1,10 @@
+XpX = X' * X
+XpXi = inv(XpX)
+Xpy = X' * y
+bhat= XpXi * Xpy
+yhat = X * bhat
+ehat = y - yhat
+
+write("bhat", bhat)
+write("yhat", yhat)
+write("ehat", ehat)

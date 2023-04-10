@@ -1,0 +1,106 @@
+#!/bin/bash
+####################################################################################
+#                                                                                  #
+#                  Univariate Example 3.1, pages 42 - 45                           #
+#                                                                                  #
+####################################################################################
+mkdir -pv 03_1.run
+cd 03_1.run
+
+# generate pedigree file
+# IDs can be left as in the textbook e.g. 1, 2 or can be strings e.g. anim001 or ID1 etc.
+
+echo "anim sire dam" > ped_head
+cat <<EOF > pedigree
+anim001 . .
+anim002 . .
+anim003 . .
+anim004 anim001 .
+anim005 anim003 anim002
+anim006 anim001 anim002
+anim007 anim004 anim005
+anim008 anim003 anim006
+EOF
+
+# generate performance file
+echo "anim Sex WWG" > perf_head
+cat <<EOF > perf
+anim004 M 4.5
+anim005 F 2.9
+anim006 F 3.9
+anim007 M 3.5
+anim008 M 5.0
+EOF
+
+# stack pedigree
+helical bolt pedstack pedigree ped_stk
+
+# generate Ainverse
+helical bolt invnrm -p ped_stk -v Ainv
+
+# vectors to generate X and Z
+awk '{print $1}' perf > id.dat 		# animals with phenotypes
+awk '{print $2}' perf > Sex 		# sex
+awk '{print $3}' perf > y1 			# phenotypes
+
+# vectors for levels of each fixed effect
+awk '$1!="."{print $1}' Sex | sort -u > Sex.eff
+
+# vector of animals in the pedigree
+awk '{print $1}' ped_stk > id.eff
+
+# vector of unique animals in the performance file
+awk '$1!="."{print $1}' id.dat | sort -u > perf_id.eff
+
+# create X
+helical euler zgen -d Sex -e Sex.eff -r y1 -o X11
+
+# create Z
+helical euler zgen -d id.dat -e id.eff -r y1 -o Z11
+
+#last line on page 42, alpha = 40/20 = 2
+alpha=$(echo 2)
+
+# create LHS and RHS matrices
+cat << EOF > expr-lhs-rhs
+#lhs
+write("X11X11", X11' * X11)
+write("X11Z11", X11' * Z11)
+write("Z11Z11", Z11' * Z11)
+#rhs
+write("rhs.1", X11' * y1)
+write("rhs.2", Z11' * y1)
+EOF
+
+helical euler expr expr-lhs-rhs
+
+# set up LHS
+echo "MAP
+X11X11 X11Z11
+sym Z11Z11+Ainv*$alpha" > lhsmap
+
+# set up RHS
+echo "MAP
+rhs.1
+rhs.2" > rhsmap
+
+# solve!
+helical euler pcg lhsmap rhsmap sol -n 100 
+
+# view MAP file of solutions
+cat sol.map
+# has file sol.rhs.0 for rhs.0 
+# has file sol.rhs.1 for rhs.1 
+
+# generate results files
+mkdir -pv results
+echo "Effect Solution" > results/FixedEffects
+paste -d " " Sex.eff <(helical euler print sol.rhs.1) | awk '{printf "%s %.3f\n",$1,$2}' >> results/FixedEffects # will be in a different order to textbook
+
+#results are in the stacked pedigree order
+echo "Animal Solution" > results/AnimalEffects
+paste -d " " id.eff <(helical euler print sol.rhs.2) | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalEffects 
+
+#to write results in the sorted pedigree order:
+echo "Animal Solution" > results/AnimalEffects.srt
+paste -d " " id.eff <(helical euler print sol.rhs.2) | sort | awk '{printf "%s %.3f\n",$1,$2}' >> results/AnimalEffects.srt 
