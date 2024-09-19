@@ -119,7 +119,7 @@ cat sol.map
 # has file sol.rhs.3 for rhs.3
 
 # generate results files
-mkdir results
+mkdir -pv results
 #create file with zero for constrained HYS HerdA-year1 and HerdA-year3
 cat <<EOF > HYS_head
 HerdA-year1 0

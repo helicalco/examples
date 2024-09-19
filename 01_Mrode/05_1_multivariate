@@ -73,11 +73,13 @@ awk '{print $1}' ped_stk > id.eff
 # vector of unique animals in the performance file
 awk '$1!="."{print $1}' id.dat | sort -u > perf_id.eff
 
-# create X (no missing values so X11 and X12 are identical)
+# create X (no missing values so X11 and X12 are identical, but we'll create them anyway)
 helical euler zgen -d Sex -e Sex.eff -r y1 -o X11
+helical euler zgen -d Sex -e Sex.eff -r y2 -o X12
 
 # create Z (no missing values so Z11 and Z12 are identical)
 helical euler zgen -d id.dat -e id.eff -r y1 -o Z11
+helical euler zgen -d id.dat -e id.eff -r y2 -o Z12
 
 helical euler invr -S -R resid -r R0 y1 y2
 
@@ -85,38 +87,38 @@ helical euler invr -S -R resid -r R0 y1 y2
 cat << EOF > expr-lhs-rhs
 #lhs
 write("X1RX1", X11' * resid11 * X11)
-write("X1RX2", X11' * resid12 * X11)
-write("X2RX2", X11' * resid22 * X11)
+write("X1RX2", X11' * resid12 * X12)
+write("X2RX2", X12' * resid22 * X12)
 
 write("X1RZ1", X11' * resid11 * Z11)
-write("X1RZ2", X11' * resid12 * Z11)
-write("X2RZ1", X11' * resid12 * Z11)
-write("X2RZ2", X11' * resid22 * Z11)
+write("X1RZ2", X11' * resid12 * Z12)
+write("X2RZ1", X12' * resid12 * Z11)
+write("X2RZ2", X12' * resid22 * Z12)
 
 write("Z1RZ1", Z11' * resid11 * Z11)
-write("Z1RZ2", Z11' * resid12 * Z11)
-write("Z2RZ1", Z11' * resid12 * Z11)
-write("Z2RZ2", Z11' * resid22 * Z11)
+write("Z1RZ2", Z11' * resid12 * Z12)
+write("Z2RZ1", Z12' * resid12 * Z11)
+write("Z2RZ2", Z12' * resid22 * Z12)
 
 #rhs
 X1Ry1 = X11' * resid11 * y1
-X2Ry1 = X11' * resid12 * y1
+X2Ry1 = X12' * resid12 * y1
 X1Ry2 = X11' * resid12 * y2
-X2Ry2 = X11' * resid22 * y2
+X2Ry2 = X12' * resid22 * y2
 
 Z1Ry1 = Z11' * resid11 * y1
-Z2Ry1 = Z11' * resid12 * y1
+Z2Ry1 = Z12' * resid12 * y1
 Z1Ry2 = Z11' * resid12 * y2
-Z2Ry2 = Z11' * resid22 * y2
+Z2Ry2 = Z12' * resid22 * y2
 
 #sex effects WWG
-write("rhs.1", X1Ry2 + X1Ry2 )
+write("rhs.1", X1Ry1 + X1Ry2)
 #sex effects PWG
-write("rhs.2", X2Ry2 + X2Ry2 )
+write("rhs.2", X2Ry1 + X2Ry2)
 #BV WWG
-write("rhs.3", Z1Ry2 + Z1Ry2 )
+write("rhs.3", Z1Ry1 + Z1Ry2)
 #BV PWG
-write("rhs.4", Z2Ry2 + Z2Ry2 )
+write("rhs.4", Z2Ry1 + Z2Ry2)
 EOF
 
 helical euler expr expr-lhs-rhs

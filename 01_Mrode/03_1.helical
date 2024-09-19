@@ -7,10 +7,12 @@
 # `cd scripts`
 # `bash ./runner` to run the automatically generated model scripts.
 
-genetic = [ 40 ]
-residual = [ 20 ]
+residual = [ 40 ]
 FitMean = false
 
+model = [
+    "trait = sex + id(nrm(id sire dam))",
+]
 
 [pedigree]
 path="pedigree"
@@ -20,8 +22,9 @@ fields=[ "id", "sire", "dam" ]
 path="perf"
 fields=[ "id", "sex", "trait" ]
 
-[model]
-trait = "sex + id(nrm(id sire dam))"
+
+[random]
+genetic = [ 20 ]
 
 [pcg]
 rounds= 2_000

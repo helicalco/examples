@@ -7,11 +7,12 @@
 # `cd scripts`
 # `bash ./runner` to run the automatically generated model scripts.
 
-genetic  = [ 0.7142857 ]   # Note the float needs a leading 0 and not just .714
-id       = [ 0.42857 ]     # the name of this variance component is the same as that used in model
 residual = [ 1 ]
 FitMean = false
 
+model = [
+    "Fat = parity + hys + id(nrm(id sire dam)) + id(ident)"
+]
 
 [pedigree]
 path="pedigree"
@@ -21,8 +22,11 @@ fields=[ "id", "sire", "dam" ]
 path="perf"
 fields=[ "id", "parity", "hys", "Fat" ]
 
-[model]
-Fat = "parity + hys + id(nrm(id sire dam)) + id(ident)"
+
+[random]
+genetic  = [ 0.7142857 ]   # Note the float needs a leading 0 and not just .714
+id       = [ 0.42857 ]     # the name of this variance component is the same as that used in model
+
 
 
 [pcg]

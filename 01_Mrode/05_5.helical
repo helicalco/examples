@@ -7,12 +7,14 @@
 # `cd scripts`
 # `bash ./runner` to run the automatically generated model scripts.
 
-genetic = [ 35, 28,       # Don't forget the commas
-            28, 30 ]
 residual = [ 65, 27,
              27, 70 ]
 FitMean = false
 
+model = [
+    "Fat_1 = HYS_1 + anim(nrm(anim sire dam))", # the (anim sire dam) is only needed once
+    "Fat_2 = HYS_2 + anim(nrm)"                 # nrm indicates a pedigree-based var-cov matrix
+]
 
 [pedigree]
 path="pedigree"
@@ -22,9 +24,10 @@ fields=[ "anim", "sire", "dam" ]
 path="perf"
 fields=[ "anim", "HYS_1", "HYS_2", "Fat_1", "Fat_2" ]
 
-[model]
-Fat_1 = "HYS_1 + anim(nrm(anim sire dam))"      # the (anim sire dam) is only needed once
-Fat_2 = "HYS_2 + anim(nrm)"                     # nrm indicates a pedigree-based var-cov matrix
+
+[random]
+genetic = [ 35, 28,       # Don't forget the commas
+            28, 30 ]
 
 [pcg]
 rounds= 2_000

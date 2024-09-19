@@ -7,12 +7,13 @@
 # `cd scripts`
 # `bash ./runner` to run the automatically generated model scripts.
 
-genetic = [ 20, 18,      # Note the comma separation of all elements in the matrix declaration
-            18, 40 ]
 residual = [ 40, 11,
              11, 30 ]
 FitMean = false
 
+model = [
+"WW = sex + anim(nrm(anim sire dam))",
+"PWG = sex + anim(nrm)", ]
 
 [pedigree]
 path="pedigree"
@@ -22,9 +23,10 @@ fields=[ "anim", "sire", "dam" ]
 path="perf"
 fields=[ "anim", "sex", "WW", "PWG" ]
 
-[model]
-WW = "sex + anim(nrm(anim sire dam))"
-PWG= "sex + anim(nrm)"
+[random]
+genetic = [ 20, 18,      # Note the comma separation of all elements in the matrix declaration
+            18, 40 ]
+
 
 [pcg]
 rounds= 2_000
